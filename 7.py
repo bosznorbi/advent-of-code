@@ -2,52 +2,50 @@ with open('input/7.txt') as f:
     lines = [s.strip() for s in f.readlines()]
 f.close()
 
-big_dirs = set()
-small_dirs = set()
 
-class Dir():
+class Dir:
     def __init__(self, parent):
         self.content = {}
         self.parent = parent
         self.size = 0
-        small_dirs.add(self)
-
-    def __getitem__(self, item):
-        return self.content
-
-    def __str__(self):
-        return self.content
+        dirs.add(self)
 
     def add_size(self, size):
         self.size += size
-        if self.size >= 100000:
-            big_dirs.add(self)
-            small_dirs.discard(self)
-        if self.parent != '':
+        if self.parent is not None:
             self.parent.add_size(size)
 
 
+dirs = set()
+root = Dir(None)
 pointer = None
-tree = {'/': Dir('')}
 
 for line in lines:
     line = line.replace('$ ', '').split(' ')
-    if line[0] == 'cd':
-        if line[1] == '/':
-            pointer = tree.get('/')
-        elif line[1] == '..':
+    if line[0] == 'ls':
+        continue
+    cmd, name = line
+    if cmd == 'cd':
+        if name == '/':
+            pointer = root
+        elif name == '..':
             pointer = pointer.parent
-        elif line[1].isalpha():
-            pointer = pointer.content[line[1]]
-    elif line[0] == 'dir':
-        pointer.content[line[1]] = Dir(pointer)
-    elif line[0].isnumeric():
-        pointer.content[line[1]] = line[0]
-        pointer.add_size(int(line[0]))
+        elif name.isalpha():
+            pointer = pointer.content[name]
+    elif cmd == 'dir':
+        pointer.content[name] = Dir(pointer)
+    elif cmd.isnumeric():
+        pointer.content[name] = cmd
+        pointer.add_size(int(cmd))
 
-print(sum(int(dir.size) for dir in small_dirs))
-clear_needed = tree['/'].size - 70000000 + 30000000
-for d in sorted(map(lambda x: x.size, big_dirs)):
-    if d > clear_needed:
-        print(d)
-        break
+
+def count_small_dir_sizes(limit):
+    return sum(d.size for d in filter(lambda d: d.size <= limit, dirs))
+
+
+def find_smallest_deletable(clear_needed):
+    return next(size for size in sorted(map(lambda x: x.size, dirs)) if size >= clear_needed)
+
+
+print(count_small_dir_sizes(100000))
+print(find_smallest_deletable(root.size - 40000000))
