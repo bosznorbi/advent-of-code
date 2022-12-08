@@ -4,96 +4,39 @@ f.close()
 
 
 class Tree:
-    def __init__(self, size, x, y):
+    def __init__(self, size):
         self.size = size
-        self.visible = False
-        self.scenic = 0
-        self.x = x
-        self.y = y
+        self.see = False
 
-    def __repr__(self):
-        if self.visible:
-            return str(self.size)
-        else:
-            return '.'
+    def __gt__(self, other):
+        return self.size > other.size
 
 
-def evaluate():
-    evaluate_from_corner()
-    reverse()
-    evaluate_from_corner()
-    reverse()
+def calc_see_from_top_left(array):
+    for row in array:
+        for i in range(len(row)):
+            row[i].see = row[i].see or min(max(row[:i], default=Tree(-1)), max(row[i + 1:], default=Tree(-1))) < row[i]
 
 
-def evaluate_from_corner():
-    col_max = []
-    row_max = []
-    for row in range(height):
-        for col in range(width):
-            tree = trees[row][col]
-            if col == 0:
-                row_max.append(tree.size)
-                tree.visible = True
-            if row == 0:
-                col_max.append(tree.size)
-                tree.visible = True
-            else:
-                if tree.size > col_max[col]:
-                    tree.visible = True
-                    col_max[col] = tree.size
-                if tree.size > row_max[row]:
-                    tree.visible = True
-                    row_max[row] = tree.size
+def get_highest_scenic():
+    max_scenic = 0
+    for row in range(len(trees)):
+        for col in range(len(trees[0])):
+            if not (row == 0 or col == 0 or row == (len(trees[0]) - 1) or col == (len(trees) - 1)):
+                scenic = 1
+                for d1, d2 in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                    value = 1
+                    while (0 < col + (d1 * value) < len(trees[0]) - 1) and (0 < row + (d2 * value) < len(trees) - 1) \
+                            and trees[row + (d2 * value)][col + (d1 * value)].size < trees[row][col].size:
+                        value += 1
+                    scenic *= value
+                max_scenic = max(max_scenic, scenic)
+    return max_scenic
 
 
-def reverse():
-    trees.reverse()
-    for r in trees:
-        r.reverse()
+trees = [list(map(lambda ch: Tree(int(ch)), line)) for line in lines]
+calc_see_from_top_left(trees)
+calc_see_from_top_left([*zip(*trees)])
 
-
-trees = []
-
-for i, line in enumerate(lines):
-    trees.append([])
-    j = 0
-    for char in line.strip():
-        j += 1
-        trees[i].append(Tree(int(char), i, j))
-
-height = len(trees)
-width = len(trees[0])
-
-
-def scenic():
-    for row in range(height):
-        for col in range(width):
-            left = right = up = down = 1
-
-            while 0 < col - left and trees[row][col - left].size < trees[row][col].size:
-                left += 1
-            while col + right < width - 1 and trees[row][col + right].size < trees[row][col].size:
-                right += 1
-            while 0 < row - down and trees[row - down][col].size < trees[row][col].size:
-                down += 1
-            while row + up < height - 1 and trees[row + up][col].size < trees[row][col].size:
-                up += 1
-
-            if row == 0:
-                left = 0
-            if col == 0:
-                up = 0
-            if row == width - 1:
-                right = 0
-            if col == height - 1:
-                down = 0
-
-            trees[row][col].scenic = left * right * up * down
-
-
-evaluate()
-print(sum(1 for x in sum(trees.copy(), []) if x.visible))
-
-scenic()
-max_scenic = max(sum(trees.copy(), []), key=lambda x: x.scenic)
-print(max_scenic.scenic)
+print(sum(1 for x in sum(trees, []) if x.see))
+print(get_highest_scenic())
