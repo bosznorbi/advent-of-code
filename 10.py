@@ -2,32 +2,25 @@ with open('input/10.txt') as f:
     lines = [s.strip() for s in f.readlines()]
 f.close()
 
-values = [0, 1]
-cycle = 1
+
+def strength(c):
+    return c * values[c - 1]
+
+
+def get_lamp_char(c):
+    return '#' if values[c - 1] <= c % 40 <= values[c - 1] + 2 else '.'
+
+
+values = [1]
+cycle = 0
 for line in lines:
     values.append(values[cycle])
-    line = line.split(' ')
-    if line[0] == 'addx':
-        cycle += 1
-        values.append(values[cycle] + int(line[1]))
     cycle += 1
+    cmd = line[4:].strip()
+    if len(cmd) > 0:
+        values.append(values[cycle] + int(cmd))
+        cycle += 1
 
-
-def strength(i):
-    return i * values[i]
-
-
-print(strength(20) + strength(60) + strength(100) + strength(140) + strength(180) + strength(220))
-
-
-def get_lamp_char(cycle):
-    if values[cycle] <= cycle % 40 <= values[cycle] + 2:
-        return '#'
-    return '.'
-
-
+print(sum([strength(i * 40 + 20) for i in range(6)]))
 for i in range(6):
-    s = ''
-    for j in range(40):
-        s += get_lamp_char(i * 40 + j + 1)
-    print(s)
+    print(''.join([get_lamp_char(i * 40 + j + 1) for j in range(39)]))
