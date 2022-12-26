@@ -1,4 +1,5 @@
 from ast import literal_eval
+from functools import cmp_to_key
 
 with open('input/13.txt') as f:
     lines = [s.strip() for s in f.readlines()]
@@ -32,3 +33,10 @@ for i, (left, right) in enumerate(groups):
     if compare(left, right) < 0:
         index_sum += (i + 1)
 print(index_sum)
+
+array = [[[2]], [[6]]]
+for line in lines:
+    if line:
+        array.append(literal_eval(line))
+array.sort(key=cmp_to_key(compare))
+print((array.index([[2]]) + 1) * (array.index([[6]]) + 1))
